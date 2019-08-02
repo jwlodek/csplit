@@ -46,17 +46,23 @@ int main(int argc, char** argv){
     // buffer for reading from file
     char buffer[256];
     while(fgets(buffer, 256, csv_file)) {
-        // initialize the list, and call csplit on commas
+        // initialize the list, and call csplit on commas (buffsize=256)
         CSplitList_t* list = csplit_init_list(256);
         CSplitError_t err = csplit(list, buffer, ",");
+
+        // print the split values
         print_csplit_list_info(list, stdout);
         printf("----------------------\n");
+
+        // example iterating through resulting list and summing values read from .csv file
         CSplitFragment_t* current_fragment = list->head;
         int sum = 0;
         while(current_fragment != NULL){
             sum = sum + atoi(current_fragment->text);
             current_fragment = current_fragment->next;
         }
+        
+        // print some and free memory
         printf("The sum of the elements in the line = %d\n", sum);
         csplit_clear_list(list);
     }
