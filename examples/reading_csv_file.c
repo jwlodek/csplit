@@ -36,13 +36,17 @@
 
 
 int main(int argc, char** argv){
+    // open the file, return if NULL
     FILE* csv_file = fopen("exampleFiles/test.csv", "r");
-    char buffer[256];
     if(csv_file == NULL){
         printf("Failed to open file, exiting.\n");
         return -1;
     }
+
+    // buffer for reading from file
+    char buffer[256];
     while(fgets(buffer, 256, csv_file)) {
+        // initialize the list, and call csplit on commas
         CSplitList_t* list = csplit_init_list(256);
         CSplitError_t err = csplit(list, buffer, ",");
         print_csplit_list_info(list, stdout);
@@ -56,5 +60,5 @@ int main(int argc, char** argv){
         printf("The sum of the elements in the line = %d\n", sum);
         csplit_clear_list(list);
     }
-
+    return 0;
 }

@@ -44,15 +44,11 @@
 /* Enum type for error codes for csplit */
 typedef enum CSPLIT_ERROR {
     CSPLIT_SUCCESS          = 0,    /* No Error */
-    CSPLIT_TOO_SHORT        = 1,    /* Input string is too short */
-    CSPLIT_NO_SUCH_INDEX    = 2,    /* Index out of range */
-    CSPLIT_UNIMPLEMENTED    = 3,    /* Function unimplemented */
-    CSPLIT_BUFF_EXCEEDED    = 4,    /* Buffer size exceeded */
+    CSPLIT_TOO_SHORT        = -1,    /* Input string is too short */
+    CSPLIT_NO_SUCH_INDEX    = -2,    /* Index out of range */
+    CSPLIT_UNIMPLEMENTED    = -3,    /* Function unimplemented */
+    CSPLIT_BUFF_EXCEEDED    = -4,    /* Buffer size exceeded */
 } CSplitError_t;
-
-
-/* Error messages for csplit error codes */
-char** CSplitErrorMessages = {"No Error", "Input string too short", "Index out of range", "Unimplemented", "Buffer size exceeded"};
 
 
 /* Struct for an individual string fragment result from csplit */
@@ -80,7 +76,25 @@ typedef struct CSPLIT_LIST {
  */
 void print_csplit_error(CSplitError_t err, FILE* fp){
     if(err == CSPLIT_SUCCESS) return;
-    fprintf(fp, "**CSPLIT ERROR**: %s\n", CSplitErrorMessages[err]);
+    const char* err_message;
+    switch(err){
+        case CSPLIT_TOO_SHORT:
+            err_message = "Input string too short";
+            break;
+        case CSPLIT_NO_SUCH_INDEX:
+            err_message = "Index out of range";
+            break;
+        case CSPLIT_UNIMPLEMENTED:
+            err_message = "Unimplemented";
+            break;
+        case CSPLIT_BUFF_EXCEEDED:
+            err_message = "Buffer size exceeded";
+            break;
+        default:
+            err_message = "Unknown Error";
+            break;
+    }
+    fprintf(fp, "**CSPLIT ERROR**: %s\n", err_message);
 }
 
 
@@ -216,7 +230,7 @@ CSplitError_t csplit_char(CSplitList_t* list, char* input_str, char token){
     list->num_elems = 0;
     while(counter < len){
         CSplitFragment_t* fragment = (CSplitFragment_t*) calloc(1, sizeof(CSplitFragment_t));
-        fragment->text = (char*) malloc(sizeof(list->BUFF_SIZE));
+        fragment->text = (char*) calloc(1, sizeof(list->BUFF_SIZE));
         int fragment_counter = 0;
         if(list->head == NULL){
             list->head = fragment;

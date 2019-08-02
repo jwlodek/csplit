@@ -52,6 +52,50 @@ int main(int argc, char** argv){
 }
 ```
 
+#### .csv reading example
+
+Example of using csplit to read .csv files.
+```C
+// include csplit and stdio
+#include "csplit.h"
+#include "stdio.h"
+
+
+int main(int argc, char** argv){
+    // open the file, return if NULL
+    FILE* csv_file = fopen("exampleFiles/test.csv", "r");
+    if(csv_file == NULL){
+        printf("Failed to open file, exiting.\n");
+        return -1;
+    }
+
+    // buffer for reading from file
+    char buffer[256];
+    while(fgets(buffer, 256, csv_file)) {
+        // initialize the list, and call csplit on commas (buffsize=256)
+        CSplitList_t* list = csplit_init_list(256);
+        CSplitError_t err = csplit(list, buffer, ",");
+
+        // print the split values
+        print_csplit_list_info(list, stdout);
+        printf("----------------------\n");
+
+        // example iterating through resulting list and summing values read from .csv file
+        CSplitFragment_t* current_fragment = list->head;
+        int sum = 0;
+        while(current_fragment != NULL){
+            sum = sum + atoi(current_fragment->text);
+            current_fragment = current_fragment->next;
+        }
+        
+        // print some and free memory
+        printf("The sum of the elements in the line = %d\n", sum);
+        csplit_clear_list(list);
+    }
+    return 0;
+}
+```
+
 ### Why does it exist?
 
 Because let's be honest - strtok is a huge pain.
