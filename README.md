@@ -12,7 +12,7 @@ include it at the top of your source file in which you would like to use it.
 #### Basic Example
 
 Example demonstrating using csplit for splitting string on single character and getting split fragments based on indexes.
-```
+```C
 // include csplit and stdio
 #include "csplit.h"
 #include "stdio.h"
