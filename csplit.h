@@ -27,9 +27,12 @@
  * A single-header C library for string splitting.
  * 
  * Author: Jakub Wlodek
- * 
+ * Created: 02-Aug-2019
  */
 
+
+#ifndef CSPLIT_H
+#define CSPLIT_H
 
 // some basic includes
 #include <stdio.h>
@@ -117,7 +120,7 @@ void csplit_clear_list(CSplitList_t* list){
  * @params[in]: list    -> list for which to print info
  * @params[in]: fp      -> file pointer to print into.
  */
-void print_list_info(CSplitList_t* list, FILE* fp){
+void print_csplit_list_info(CSplitList_t* list, FILE* fp){
     CSplitFragment_t* current_fragment = list->head;
     while(current_fragment != NULL){
         fprintf(fp, "%s\n", current_fragment->text);
@@ -163,7 +166,7 @@ char* get_fragment_at_index(CSplitList_t* list, int index){
  * @params[in]: list    -> list resulting from a call to csplit
  * @return: output_arr  -> an array of char* (strings) pulled from list, or NULL if num_elems is 0
  */
-char** convert_to_string_array(CSplitList_t* list){
+char** csplit_list_to_array(CSplitList_t* list){
     if(list->num_elems < 1)
         return NULL;
     char** output_arr = (char**) malloc(sizeof(char*) * list->num_elems);
@@ -210,7 +213,6 @@ CSplitError_t reverse_csplit_list(CSplitList_t* list){
 CSplitError_t csplit_char(CSplitList_t* list, char* input_str, char token){
     int counter = 0;
     int len = strlen(input_str);
-    printf("%d\n", len);
     list->num_elems = 0;
     while(counter < len){
         CSplitFragment_t* fragment = (CSplitFragment_t*) calloc(1, sizeof(CSplitFragment_t));
@@ -224,8 +226,7 @@ CSplitError_t csplit_char(CSplitList_t* list, char* input_str, char token){
             list->tail->next = fragment;
             list->tail = fragment;
         }
-        while(input_str[counter] != token && counter < len){
-            printf("Input: %c, token %c, counter: %d\n", input_str[counter], token, counter);
+        while(input_str[counter] != token && counter < len && input_str[counter] != '\n'){
             fragment->text[fragment_counter] = input_str[counter];
             counter++;
             fragment_counter++;
@@ -278,3 +279,5 @@ CSplitError_t rcsplit(CSplitList_t* output_list, char* input_str, char* token){
     err = reverse_csplit_list(output_list);
     return err;
 }
+
+#endif

@@ -1,2 +1,8 @@
-csplit_example
-csplit_example_db
+basic_csplit_example
+basic_csplit_example_db
+reading_csv_example
+reading_csv_example_db
+.vscode/
+~*
+*~
+*#
