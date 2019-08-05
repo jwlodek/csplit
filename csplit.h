@@ -31,6 +31,7 @@
  */
 
 
+// Include guard - avoid redefinition
 #ifndef CSPLIT_H
 #define CSPLIT_H
 
@@ -38,7 +39,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
 
 
 /* Enum type for error codes for csplit */
@@ -53,23 +53,23 @@ typedef enum CSPLIT_ERROR {
 
 /* Struct for an individual string fragment result from csplit */
 typedef struct CSPLIT_FRAGMENT {
-    char* text;                         /* actual text from split */
-    struct CSPLIT_FRAGMENT* next;       /* next fragment in the linked list */
-    struct CSPLIT_FRAGMENT* prev;       /* previous fragment in the linked list */
+    char* text;                         /* Text of the fragment. */
+    struct CSPLIT_FRAGMENT* next;       /* Next fragment in the linked list */
+    struct CSPLIT_FRAGMENT* prev;       /* Previous fragment in the linked list */
 } CSplitFragment_t;
 
 
 /* Struct that stores the csplit linked list */
 typedef struct CSPLIT_LIST {
-    int num_elems;              /* number of elements in the list */
-    size_t BUFF_SIZE;           /* Buffer size given to each fragment parsed */
-    CSplitFragment_t* head;     /* head of the linked list (first element) */
-    CSplitFragment_t* tail;     /* tail of the linked list (last element) */
+    int num_elems;              /* Number of elements in the list */
+    size_t BUFF_SIZE;           /* Buffer size given to each fragment parsed - set at init. */
+    CSplitFragment_t* head;     /* Head of the linked list (first element) */
+    CSplitFragment_t* tail;     /* Tail of the linked list (last element) */
 } CSplitList_t;
 
 
 /**
- * Function for printing the csplit errpr cpde string. Only print for non-success code
+ * Function for printing the csplit error cpde string. Only print for non-success code
  * 
  * @params[in]: err -> error code returned by csplit
  * @params[in]: fp  -> output file pointer (typically stderr or stdout)
@@ -128,11 +128,20 @@ void csplit_clear_list(CSplitList_t* list){
 }
 
 
+/**
+ * Function that pushes a new CSplitFragment to the end of the list, and allocates memory for the text,
+ * with size list->BUFF_SIZE
+ * 
+ * @params[out]: list       -> The list with fragment appended to the tail
+ * @params[in]: fragment    -> fragment to append to the list. fragment->text will be allocated based on list->BUFF_SIZE
+ */
 CSplitError_t csplit_push_to_list(CSplitList_t* list, CSplitFragment_t* fragment){
+    // first make sure neither is null
     if(list == NULL || fragment == NULL){
         return CSPLIT_TOO_SHORT;
     }
     else{
+        // then update the number of elements, and the pointers
         list->num_elems = list->num_elems + 1;
         if(list->head == NULL){
             list->head = fragment;
@@ -143,9 +152,12 @@ CSplitError_t csplit_push_to_list(CSplitList_t* list, CSplitFragment_t* fragment
             fragment->prev = list->tail;
             list->tail = fragment;
         }
+        // allocate fragment text field
         fragment->text = (char*) calloc(1, list->BUFF_SIZE);
     }
+    return CSPLIT_SUCCESS;
 }
+
 
 /**
  * Function that prints information about a csplit list
@@ -154,11 +166,22 @@ CSplitError_t csplit_push_to_list(CSplitList_t* list, CSplitFragment_t* fragment
  * @params[in]: fp      -> file pointer to print into.
  */
 void print_csplit_list_info(CSplitList_t* list, FILE* fp){
+    if(list == NULL || fp == NULL) return;
+    fprintf(fp, "List contains %d elements\n", list->num_elems);
+    fprintf(fp, "Supports indexes -%d to %d.\n", list->num_elems, list->num_elems -1);
     CSplitFragment_t* current_fragment = list->head;
     while(current_fragment != NULL){
         fprintf(fp, "%s\n", current_fragment->text);
         current_fragment = current_fragment->next;
     }
+}
+
+
+void print_csplit_fragment_info(CSplitFragment_t* fragment, FILE* fp){
+    if(fragment == NULL || fp == NULL) return;
+    fprintf(fp, "Fragment has text %s\n", fragment->text);
+    if(fragment->next != NULL) fprintf(fp, "Fragment has next with text %s\n", fragment->next->text);
+    if(fragment->prev != NULL) fprintf(fp, "Fragment has prev with text %s\n", fragment->prev->text);    
 }
 
 
@@ -170,6 +193,7 @@ void print_csplit_list_info(CSplitList_t* list, FILE* fp){
  * @return: text        -> string at the given index or NULL if index out of range.
  */
 char* get_fragment_at_index(CSplitList_t* list, int index){
+    // convert index into absolute index (if negative);
     int target_index;
     if(index < 0){
         target_index = index + list->num_elems;
@@ -177,16 +201,19 @@ char* get_fragment_at_index(CSplitList_t* list, int index){
     else{
         target_index = index;
     }
+    // if index is out of range return null
     if(list->num_elems <= target_index || target_index < 0){
         return NULL;
     }
     else{
+        // iterate over list until index found
         int counter = 0;
         CSplitFragment_t* current_fragment = list->head;
         while(counter < target_index){
             current_fragment = current_fragment->next;
             counter++;
         }
+        // return the text field
         return current_fragment->text;
     }
 }
@@ -195,6 +222,8 @@ char* get_fragment_at_index(CSplitList_t* list, int index){
 /**
  * Function that converts a csplit list into an array if the user requires simpler
  * iteration
+ * 
+ * DEPRACATED
  * 
  * @params[in]: list    -> list resulting from a call to csplit
  * @return: output_arr  -> an array of char* (strings) pulled from list, or NULL if num_elems is 0
@@ -222,12 +251,15 @@ char** csplit_list_to_array(CSplitList_t* list){
  */
 CSplitError_t reverse_csplit_list(CSplitList_t* list){
     int i;
+    // iterate over list and swap next and previous fields
     CSplitFragment_t* temp = list->head;
     for(i = 0; i < list->num_elems; i++){
         CSplitFragment_t* temp2 = temp->next;
         temp->next = temp->prev;
         temp->prev = temp2;
+        temp = temp2;
     }
+    // swap head and tail
     temp = list->head;
     list->head = list->tail;
     list->tail = temp;
@@ -240,33 +272,153 @@ CSplitError_t reverse_csplit_list(CSplitList_t* list){
  * \n, \r, \t, space will be removed from the start and end of each string.
  * 
  * @params[in]: input_str   -> the input string to strip
- * @params[out]: output_str -> the allocated memory for the output string
+ * @return: output_str      -> the string with whitespace removed from the ends. Must be freed.
  */
-CSplitError_t csplit_strip(char* input_str, char* output_str){
-    CSplitError_t err = CSPLIT_SUCCESS;
-    int len = strlen(input_str);
-    if(input_str == NULL || output_str == NULL){
-        err = CSPLIT_TOO_SHORT;
-    }
+char* csplit_strip(char* input_str){
+    char* output_str;
+    // check if input is null
+    if(input_str == NULL)
+        output_str = NULL;
     else{
+        // allocate enough space. At most we require len of input space
+        int len = strlen(input_str);
+        output_str = (char*) calloc(1, len);
         int counter = 0;
         int output_counter = 0;
         int temp = len - 1;
         int first_found = 0;
+        // count down how many chars we don't want from rear of string
         while(input_str[temp] == ' ' || input_str[temp] == '\n' || input_str[temp] == '\r' || input_str[temp] == '\t'){
             temp = temp - 1;
         }
+        // then count up to that point, skipping whitespace until first char found
         while(counter <= temp){
             if(input_str[counter] != ' ' && input_str[counter] != '\n' && input_str[counter] != '\r' && input_str[counter] != '\t' || first_found != 0){
                 first_found = 1;
-                if((output_str + counter) == NULL)
-                    return CSPLIT_BUFF_EXCEEDED;
                 output_str[output_counter] = input_str[counter];
                 output_counter++;
             }
             counter++;
         }
     }
+    return output_str;
+}
+
+
+/**
+ * Function that removes all whitespace characters of a given string into an output string.
+ * Note that resulting char* must be free'd after it is no longer used
+ * 
+ * @params[in]: input_str   -> the input string to strip
+ * @return: output_str      -> the string with whitespace removed.
+ */
+char* csplit_remove_whitespace(char* input_str){
+    char* output_str;
+    if(input_str == NULL)
+        output_str = NULL;
+    else{
+        int len = strlen(input_str);
+        output_str = (char*) calloc(1, len);
+        int counter = 0;
+        int output_counter = 0;
+        // read through but don't copy whitespace
+        while(counter < len){
+            if(input_str[counter] != ' ' && input_str[counter] != '\n' && input_str[counter] != '\r' && input_str[counter] != '\t'){
+                output_str[output_counter] = input_str[counter];
+                output_counter++;
+            }
+            counter++;
+        }
+    }
+    return output_str;
+}
+
+
+/**
+ * Function that checks if a given string starts with another given string.
+ * 
+ * @params[in]: input_str       -> string to check against
+ * @params[in]: starts_with     -> string to try to match with start of input string
+ * @return:     int             -> -2 if input is invalid, -1 if doesn't start with given string, or 0 if it does
+ */
+int csplit_startswith(char* input_str, char* starts_with){
+    if(input_str == NULL || starts_with == NULL){
+        return -2;
+    }
+    else{
+        int swith_len = strlen(starts_with);
+        int istr_len = strlen(input_str);
+        if(swith_len > istr_len) return -1;
+        else{
+            int i;
+            for(i = 0; i< swith_len; i++){
+                if(starts_with[i] != input_str[i]) return -1;
+            }
+        }
+    }
+    return 0;
+}
+
+
+/**
+ * Function that checks if a given string ends with another given string.
+ * 
+ * @params[in]: input_str       -> string to check against
+ * @params[in]: ends_with       -> string to try to match with end of input string
+ * @return:     int             -> -2 if input is invalid, -1 if doesn't end with given string, or 0 if it does
+ */
+int csplit_endswith(char* input_str, char* ends_with){
+    if(input_str == NULL || ends_with == NULL){
+        return -2;
+    }
+    else{
+        int ewith_len = strlen(ends_with);
+        int istr_len = strlen(input_str);
+        if(ewith_len > istr_len) return -1;
+        else{
+            int i;
+            for(i = 0; i < ewith_len; i++){
+                if(ends_with[ewith_len -1 -i] != input_str[istr_len -1 -i]) return -1;
+            }
+        }
+    }
+    return 0;
+}
+
+
+/**
+ * Function that runs csplit on a particular character from the rear of the string.
+ * Called if length of token string is 1, and max_splits is negative
+ * 
+ * @params[out]: list       -> split input string into this list structure
+ * @params[in]: input_str   -> input string
+ * @params[in]: token       -> character on which to split
+ */
+CSplitError_t csplit_rchar(CSplitList_t* list, char* input_str, char token, int max_splits){
+    CSplitError_t err = CSPLIT_SUCCESS;
+    int len = strlen(input_str);
+    int counter = len - 1;
+    list->num_elems = 0;
+    int num_splits = 0;
+    while(counter >= 0){
+        CSplitFragment_t* fragment = (CSplitFragment_t*) calloc(1, sizeof(CSplitFragment_t));
+        err = csplit_push_to_list(list, fragment);
+        int fragment_counter = 0;
+        int temp = 0;
+        while((input_str[counter] != token || num_splits <= max_splits) && counter >= 0){
+            counter--;
+            temp++;
+            if(temp > list->BUFF_SIZE)
+                return CSPLIT_BUFF_EXCEEDED;
+        }
+        while(fragment_counter < temp){
+            fragment->text[fragment_counter] = input_str[counter + 1 + fragment_counter];
+            fragment_counter++;
+        }
+        num_splits--;
+        counter--;
+    }
+    err = reverse_csplit_list(list);
     return err;
 }
 
@@ -280,23 +432,18 @@ CSplitError_t csplit_strip(char* input_str, char* output_str){
  * @params[in]: token       -> character on which to split
  */
 CSplitError_t csplit_char(CSplitList_t* list, char* input_str, char token, int max_splits){
+    if(max_splits < 0)
+        csplit_rchar(list, input_str, token, max_splits);
+    CSplitError_t err = CSPLIT_SUCCESS;
     int counter = 0;
     int len = strlen(input_str);
     list->num_elems = 0;
     int num_splits = 0;
     while(counter < len){
         CSplitFragment_t* fragment = (CSplitFragment_t*) calloc(1, sizeof(CSplitFragment_t));
-        fragment->text = (char*) calloc(1, sizeof(list->BUFF_SIZE));
+        err = csplit_push_to_list(list, fragment);
         int fragment_counter = 0;
-        if(list->head == NULL){
-            list->head = fragment;
-            list->tail = fragment;
-        }
-        else{
-            list->tail->next = fragment;
-            list->tail = fragment;
-        }
-        while((input_str[counter] != token && counter < len) || num_splits < max_splits){
+        while((input_str[counter] != token || num_splits >= max_splits) && counter < len){
             fragment->text[fragment_counter] = input_str[counter];
             counter++;
             fragment_counter++;
@@ -305,49 +452,8 @@ CSplitError_t csplit_char(CSplitList_t* list, char* input_str, char token, int m
         }
         num_splits++;
         counter++;
-        list->num_elems = list->num_elems + 1;
     }
-    return CSPLIT_SUCCESS;
-}
-
-
-/**
- * Function that runs csplit on a particular character from the rear of the string.
- * Called if length of token string is 1, and max_splits is negative
- * 
- * @params[out]: list       -> split input string into this list structure
- * @params[in]: input_str   -> input string
- * @params[in]: token       -> character on which to split
- */
-CSplitError_t csplit_rchar(CSplitList_t* list, char* input_str, char token, int max_splits){
-    int len = strlen(input_str);
-    int counter = len;
-    list->num_elems = 0;
-    int num_splits = 0;
-    while(counter > 0){
-        CSplitFragment_t* fragment = (CSplitFragment_t*) calloc(1, sizeof(CSplitFragment_t));
-        fragment->text = (char*) calloc(1, sizeof(list->BUFF_SIZE));
-        int fragment_counter = 0;
-        if(list->tail == NULL){
-            list->tail = fragment;
-            list->head = fragment;
-        }
-        else{
-            list->head->prev = fragment;
-            list->head = fragment;
-        }
-        while((input_str[counter] != token && counter > 0) || num_splits > max_splits){
-            fragment->text[fragment_counter] = input_str[counter];
-            counter--;
-            fragment_counter++;
-            if(fragment_counter > list->BUFF_SIZE)
-                return CSPLIT_BUFF_EXCEEDED;
-        }
-        num_splits--;
-        counter--;
-        list->num_elems = list->num_elems + 1;
-    }
-    return CSPLIT_SUCCESS;
+    return err;
 }
 
 

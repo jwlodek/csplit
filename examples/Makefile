@@ -4,7 +4,7 @@ all:
 
 debug:
 	gcc basic_csplit_example.c -I../. -o basic_csplit_example_db -g
-	gcc reading_csv_file.c -I../. -o reading_csv_example -g
+	gcc reading_csv_file.c -I../. -o reading_csv_example_db -g
 
 clean:
 	rm -f basic_csplit_example
