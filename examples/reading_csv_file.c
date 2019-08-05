@@ -73,5 +73,6 @@ int main(int argc, char** argv){
             printf("----------------------\n");
         }
     }
+    fclose(csv_file);
     return 0;
 }

@@ -121,6 +121,7 @@ void csplit_clear_list(CSplitList_t* list){
     CSplitFragment_t* current_fragment = list->head;
     while(current_fragment != NULL){
         CSplitFragment_t* temp = current_fragment->next;
+        free(current_fragment->text);
         free(current_fragment);
         current_fragment = temp;
     }
