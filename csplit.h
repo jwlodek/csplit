@@ -235,6 +235,13 @@ CSplitError_t reverse_csplit_list(CSplitList_t* list){
 }
 
 
+/**
+ * Function that strips a given string into an output string. Will remove whitespace character:
+ * \n, \r, \t, space will be removed from the start and end of each string.
+ * 
+ * @params[in]: input_str   -> the input string to strip
+ * @params[out]: output_str -> the allocated memory for the output string
+ */
 CSplitError_t csplit_strip(char* input_str, char* output_str){
     CSplitError_t err = CSPLIT_SUCCESS;
     int len = strlen(input_str);
@@ -245,11 +252,13 @@ CSplitError_t csplit_strip(char* input_str, char* output_str){
         int counter = 0;
         int output_counter = 0;
         int temp = len - 1;
-        while(input_str[temp] == ' ' || input_str[temp] == '\n' || input_str[temp] == '\r'){
+        int first_found = 0;
+        while(input_str[temp] == ' ' || input_str[temp] == '\n' || input_str[temp] == '\r' || input_str[temp] == '\t'){
             temp = temp - 1;
         }
-        while(counter < temp){
-            if(input_str[counter] != ' ' && input_str[counter] != '\n' && input_str[counter] != '\r'){
+        while(counter <= temp){
+            if(input_str[counter] != ' ' && input_str[counter] != '\n' && input_str[counter] != '\r' && input_str[counter] != '\t' || first_found != 0){
+                first_found = 1;
                 if((output_str + counter) == NULL)
                     return CSPLIT_BUFF_EXCEEDED;
                 output_str[output_counter] = input_str[counter];
