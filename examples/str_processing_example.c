@@ -23,12 +23,11 @@
  *********************************************************************************/
 
 /**
- * The most basic use case example for the csplit library.
+ * Example demonstrating basic string processing csplit calls
  * 
- * Splits an input string on a single character.
  * 
  * Author: Jakub Wlodek
- * Created: 02-Aug-2019
+ * Created: 05-Aug-2019
  * 
  */
 
@@ -36,36 +35,37 @@
 #include "csplit.h"
 #include <stdio.h>
 
-
 int main(int argc, char** argv){
-    // our test string
-    char* test_string = "Hello how are you doing?";
-    printf("Our demo string is: %s\n", test_string);
+    // init test string
+    char* test_string = "Hello how are you doing?\n\n";
+    printf("Our demo string is: --%s--\n", test_string);
 
-    // initialize our output list. We pass 256 as our buffer size, meaning that our fragments cannot 
-    // be longer than 256 characters in length.
-    CSplitList_t* list = csplit_init_list(256);
+    // strip outermost whitespace (2 newlines)
+    char* stripped_str = csplit_strip(test_string);
+    printf("The stripped string is --%s--\n", stripped_str);
+    printf("Note the disappeared newline characters.\n");
 
-    // split on the " " (space) character
-    CSplitError_t err = csplit(list, test_string, " ");
+    // startswith command
+    int temp = csplit_startswith(test_string, "Hello");
+    if(temp == 0){
+        printf("The input started with 'Hello'\n");
+    }
 
-    // print the list of split fragments to stdout
-    print_csplit_list_info(list, stdout);
+    // endswith - will fail here because of newlines, but succeed on the stripped one.
+    temp = csplit_endswith(test_string, "doing?");
+    if(temp == 0){
+        printf("The input string ended with 'doing?'\n");
+    }
+    temp = csplit_endswith(stripped_str, "doing?");
+    if(temp == 0){
+        printf("After stripping away newlines, the string ends with 'doing?'\n");
+    }
 
-    // print a separator
-    printf("----------------------------\n");
+    // remove all whitespace and print
+    char* no_whitespace = csplit_remove_whitespace(test_string);
+    printf("The input string without any whitespace: --%s--\n", no_whitespace);
 
-    // demo of getting fragment string at an index, 3 index will give us "you"
-    char* test_get_index = get_fragment_at_index(list, 3);
-
-    // demo of getting fragment string using reverse index, -1 will give us the last
-    // fragment, in this case "doing?"
-    char* test_get_r_index = get_fragment_at_index(list, -1);
-
-    // print results
-    printf("Get index: %s\n", test_get_index);
-    printf("Get reverse index: %s\n", test_get_r_index);
-
-    // free memory
-    csplit_clear_list(list);
+    // free memory.
+    free(stripped_str);
+    free(no_whitespace);
 }

@@ -46,25 +46,32 @@ int main(int argc, char** argv){
     // buffer for reading from file
     char buffer[256];
     while(fgets(buffer, 256, csv_file)) {
-        // initialize the list, and call csplit on commas (buffsize=256)
-        CSplitList_t* list = csplit_init_list(256);
-        CSplitError_t err = csplit(list, buffer, ",");
 
-        // print the split values
-        print_csplit_list_info(list, stdout);
-        printf("----------------------\n");
+        // ignore lines that are blank
+        if(strlen(buffer) > 1){
+            // initialize the list, strip whitespace, and call csplit on commas (buffsize=256)
+            CSplitList_t* list = csplit_init_list(256);
+            char* temp = csplit_strip(buffer);
+            CSplitError_t err = csplit(list, temp, ",");
+            free(temp); /* Make sure to free stripped line */
 
-        // example iterating through resulting list and summing values read from .csv file
-        CSplitFragment_t* current_fragment = list->head;
-        int sum = 0;
-        while(current_fragment != NULL){
-            sum = sum + atoi(current_fragment->text);
-            current_fragment = current_fragment->next;
+            // print the split values
+            print_csplit_list_info(list, stdout);
+
+            // example iterating through resulting list and summing values read from .csv file
+            CSplitFragment_t* current_fragment = list->head;
+            int sum = 0;
+            while(current_fragment != NULL){
+                sum = sum + atoi(current_fragment->text);
+                current_fragment = current_fragment->next;
+            }
+
+            // print sum of numbers in line, and free memory
+            printf("The sum of the elements in the line = %d\n", sum);
+            csplit_clear_list(list);
+
+            printf("----------------------\n");
         }
-        
-        // print some and free memory
-        printf("The sum of the elements in the line = %d\n", sum);
-        csplit_clear_list(list);
     }
     return 0;
 }

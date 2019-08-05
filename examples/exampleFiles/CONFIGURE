@@ -1,0 +1,13 @@
+#
+# A dummy Configure file used with the read_configure_example.c program
+#
+# Author: Jakub Wlodek
+# Created: 05-Aug-2019
+#
+#
+
+INSTALL_PATH=/home/username
+
+INSTALL_UTESTS=YES
+
+BUILD_EXAMPLES=NO
