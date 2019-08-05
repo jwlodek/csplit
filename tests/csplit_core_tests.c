@@ -223,7 +223,7 @@ Test(asserts, csplit_endswith_test, .init=setup_strings, .fini=teardown_strings)
 // ---------------- Tests for split functions -------------
 // --------------------------------------------------------
 
-
+/* Test for splitting on max number of splits */
 Test(asserts, csplit_char_max_test, .init=setup_strings, .fini=teardown_strings){
     list = csplit_init_list(256);
     char* short_test_str = "Hello Cool World!";
@@ -234,7 +234,7 @@ Test(asserts, csplit_char_max_test, .init=setup_strings, .fini=teardown_strings)
     cr_assert(strcmp(list->tail->text, "World!") == 0, "Third string not as expected");
 }
 
-
+/* Test reverse split on max number of splits */
 Test(asserts, csplit_rchar_max_test, .init=setup_strings, .fini=teardown_strings){
     list = csplit_init_list(256);
     char* short_test_str = "Hello Cool World!";
@@ -246,7 +246,7 @@ Test(asserts, csplit_rchar_max_test, .init=setup_strings, .fini=teardown_strings
     cr_assert(strcmp(list->tail->text, "World!") == 0, "Third string not as expected");
 }
 
-
+/* Test split on single split */
 Test(asserts, csplit_char_single_test, .init=setup_strings, .fini=teardown_strings){
     list = csplit_init_list(256);
     char* short_test_str = "Hello Cool World!";
@@ -256,6 +256,7 @@ Test(asserts, csplit_char_single_test, .init=setup_strings, .fini=teardown_strin
     cr_assert(strcmp(list->head->next->text, "Cool World!") == 0, "Second string not as expected");
 }
 
+/* Test reverse split on single split */
 Test(asserts, csplit_char_rsingle_test, .init=setup_strings, .fini=teardown_strings){
     list = csplit_init_list(256);
     char* short_test_str = "Hello Cool World!";
@@ -263,4 +264,50 @@ Test(asserts, csplit_char_rsingle_test, .init=setup_strings, .fini=teardown_stri
     cr_assert(list->num_elems == 2, "Number of fragments parsed is not as expected");
     cr_assert(strcmp(list->head->text, "Hello Cool") == 0, "First string not as expected");
     cr_assert(strcmp(list->tail->text, "World!") == 0, "Second string not as expected");
+}
+
+
+/* Test for splitting on max number of splits on string*/
+Test(asserts, csplit_string_max_test, .init=setup_strings, .fini=teardown_strings){
+    list = csplit_init_list(256);
+    char* short_test_str = "HelloCoolWoorld!";
+    CSplitError_t err = csplit_str(list, short_test_str, "oo", strlen(short_test_str));
+    cr_assert(list->num_elems == 3, "Number of fragments parsed is not as expected");
+    cr_assert(strcmp(list->head->text, "HelloC") == 0, "First string not as expected");
+    cr_assert(strcmp(list->head->next->text, "lW") == 0, "Second string not as expected");
+    cr_assert(strcmp(list->tail->text, "rld!") == 0, "Third string not as expected");
+}
+
+/* Test for splitting on max number of splits on string*/
+Test(asserts, csplit_string_lim_test, .init=setup_strings, .fini=teardown_strings){
+    list = csplit_init_list(256);
+    char* short_test_str = "HelloCoolWoorld!";
+    CSplitError_t err = csplit_str(list, short_test_str, "oo", 1);
+    cr_assert(list->num_elems == 2, "Number of fragments parsed is not as expected");
+    cr_assert(strcmp(list->head->text, "HelloC") == 0, "First string not as expected");
+    cr_assert(strcmp(list->tail->text, "lWoorld!") == 0, "Second string not as expected");
+}
+
+
+/* Test for splitting on max number of splits on string*/
+Test(asserts, csplit_rstring_max_test, .init=setup_strings, .fini=teardown_strings){
+    list = csplit_init_list(256);
+    char* short_test_str = "HelloCoolWoorld!";
+    int target = (int) -1 * strlen(short_test_str);
+    CSplitError_t err = csplit_rstr(list, short_test_str, "oo", target);
+    cr_assert(list->num_elems == 3, "Number of fragments parsed is not as expected");
+    cr_assert(strcmp(list->head->text, "HelloC") == 0, "First string not as expected");
+    cr_assert(strcmp(list->head->next->text, "lW") == 0, "Second string not as expected");
+    cr_assert(strcmp(list->tail->text, "rld!") == 0, "Third string not as expected");
+}
+
+
+/* Test for splitting on max number of splits on string*/
+Test(asserts, csplit_rstring_lim_test, .init=setup_strings, .fini=teardown_strings){
+    list = csplit_init_list(256);
+    char* short_test_str = "HelloCoolWoorld!";
+    CSplitError_t err = csplit_rstr(list, short_test_str, "oo", -1);
+    cr_assert(list->num_elems == 2, "Number of fragments parsed is not as expected");
+    cr_assert(strcmp(list->head->text, "HelloCoolW") == 0, "First string not as expected");
+    cr_assert(strcmp(list->tail->text, "rld!") == 0, "Second string not as expected");
 }

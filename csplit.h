@@ -398,7 +398,6 @@ CSplitError_t csplit_rchar(CSplitList_t* list, char* input_str, char token, int 
     CSplitError_t err = CSPLIT_SUCCESS;
     int len = strlen(input_str);
     int counter = len - 1;
-    list->num_elems = 0;
     int num_splits = 0;
     while(counter >= 0){
         CSplitFragment_t* fragment = (CSplitFragment_t*) calloc(1, sizeof(CSplitFragment_t));
@@ -433,15 +432,15 @@ CSplitError_t csplit_rchar(CSplitList_t* list, char* input_str, char token, int 
  */
 CSplitError_t csplit_char(CSplitList_t* list, char* input_str, char token, int max_splits){
     if(max_splits < 0)
-        csplit_rchar(list, input_str, token, max_splits);
+        return csplit_rchar(list, input_str, token, max_splits);
     CSplitError_t err = CSPLIT_SUCCESS;
     int counter = 0;
     int len = strlen(input_str);
-    list->num_elems = 0;
     int num_splits = 0;
     while(counter < len){
         CSplitFragment_t* fragment = (CSplitFragment_t*) calloc(1, sizeof(CSplitFragment_t));
         err = csplit_push_to_list(list, fragment);
+        if(err != CSPLIT_SUCCESS) return err;
         int fragment_counter = 0;
         while((input_str[counter] != token || num_splits >= max_splits) && counter < len){
             fragment->text[fragment_counter] = input_str[counter];
@@ -457,29 +456,112 @@ CSplitError_t csplit_char(CSplitList_t* list, char* input_str, char token, int m
 }
 
 
-CSplitError_t csplit_max(CSplitList_t* list, char* input_str, char* token, int max_splits){
+CSplitError_t csplit_rstr(CSplitList_t* list, char* input_str, char* token, int max_splits){
     CSplitError_t err = CSPLIT_SUCCESS;
-    if(strlen(input_str) < 1){
+    int in_len = strlen(input_str);
+    int counter = in_len - 1;
+    int num_splits = 0;
+    int token_len = strlen(token);
+    while(counter >= 0){
+        CSplitFragment_t* fragment = (CSplitFragment_t*) calloc(1, sizeof(CSplitFragment_t));
+        err = csplit_push_to_list(list, fragment);
+        int fragment_counter = 0;
+        int temp = 0;
+        while((csplit_startswith(input_str + counter, token) != 0 || num_splits <= max_splits) && counter >= 0){
+            counter--;
+            temp++;
+            if(temp > list->BUFF_SIZE)
+                return CSPLIT_BUFF_EXCEEDED;
+        }
+        int wasTokenFound = csplit_startswith(input_str + counter, token);
+        if(wasTokenFound == 0){
+            temp = temp - token_len + 1;
+        }
+        while(fragment_counter < temp){
+            if(wasTokenFound == 0){
+                fragment->text[fragment_counter] = input_str[counter + fragment_counter + token_len];
+            }
+            else{
+                fragment->text[fragment_counter] = input_str[counter + 1 + fragment_counter];
+            }
+            fragment_counter++;
+        }
+        num_splits--;
+        counter--;
+    }
+    err = reverse_csplit_list(list);
+    return err;
+}
+
+
+/**
+ * Function that splits a given input string based on another string.
+ * 
+ * @params[out]: list           -> output list splitting input str on string token
+ * @params[in]: input_str       -> input string which will be split
+ * @params[in]: token           -> string on which to split
+ * @params[in]: max_splits      -> max number of splits to perform. Negative if starting from end of string.
+ * @return:     err             -> error code if there was a problem with csplitting.
+ */
+CSplitError_t csplit_str(CSplitList_t* list, char* input_str, char* token, int max_splits){
+    if(max_splits < 0)
+        return csplit_rstr(list, input_str, token, max_splits);
+    CSplitError_t err = CSPLIT_SUCCESS;
+    int counter = 0;
+    int in_len = strlen(input_str);
+    int num_splits = 0;
+    int token_len = strlen(token);
+    while(counter < in_len){
+        CSplitFragment_t* fragment = (CSplitFragment_t*) calloc(1, sizeof(CSplitFragment_t));
+        err = csplit_push_to_list(list, fragment);
+        if(err != CSPLIT_SUCCESS) return err;
+        int fragment_counter = 0;
+        while((csplit_startswith(input_str + counter, token)!= 0 || num_splits >= max_splits) && counter < in_len){
+            fragment->text[fragment_counter] = input_str[counter];
+            counter++;
+            fragment_counter++;
+            if(fragment_counter > list->BUFF_SIZE)
+                return CSPLIT_BUFF_EXCEEDED;
+        }
+        num_splits++;
+        counter = counter + token_len;
+    }
+    return err;
+}
+
+
+
+/**
+ * Function that allows user to split based on a limited number of splits, either forward
+ * or in reverse. A max_splits >= len(input_str) will guarantee all possible splits
+ * 
+ * @params[out]: list           -> output list splitting input str on string token
+ * @params[in]: input_str       -> input string which will be split
+ * @params[in]: token           -> string on which to split
+ * @params[in]: max_splits      -> max number of splits to perform. Negative if starting from end of string.
+ * @return:     err             -> error code if there was a problem with csplitting.
+ */
+CSplitError_t csplit_lim(CSplitList_t* list, char* input_str, char* token, int max_splits){
+    CSplitError_t err = CSPLIT_SUCCESS;
+    // first check to see if input string is valid and token is valid
+    if(strlen(input_str) < 1 || strlen(token) < 1){
         err = CSPLIT_TOO_SHORT;
     }
     else if(strlen(token) == 1){
-        if(max_splits >= 0){
-            err = csplit_char(list, input_str, token[0], max_splits);
-        }
-        else{
-            err = csplit_rchar(list, input_str, token[0], max_splits);
-        }
+        // if token is one character, we split on that one character
+        err = csplit_char(list, input_str, token[0], max_splits);
     }
     else{
-        err = CSPLIT_UNIMPLEMENTED;
+        // otherwise we split on the given string
+        err = csplit_str(list, input_str, token, max_splits);
     }
     return err;
 }
 
 
 /**
- * Top level csplit function call. Outputs a csplit list split on a string token. If token is single character,
- * calls csplit_char. If length is less than 1, then input too short error outputted.
+ * Top level csplit function call. Outputs a csplit list split on a string token. Calls
+ * csplit_lim with max_splits = len(input_str), ensuring that all possible splits will be made.
  * 
  * @params[out]: list           -> output list splitting input str on string token
  * @params[in]: input_str       -> input string which will be split
@@ -487,7 +569,7 @@ CSplitError_t csplit_max(CSplitList_t* list, char* input_str, char* token, int m
  * @return:     err             -> error code if there was a problem with csplitting.
  */
 CSplitError_t csplit(CSplitList_t* list, char* input_str, char* token){
-    return csplit_max(list, input_str, token, (int) strlen(input_str));
+    return csplit_lim(list, input_str, token, (int) strlen(input_str));
 }
 
 
