@@ -23,7 +23,15 @@
  *********************************************************************************/
 
 /**
- * 
+ * @defgroup intern Internal
+ * @brief Internal functions, not intended to be used by users
+ * @defgroup set Setup
+ * @brief Setup and Diagnostic functions used by csplit
+ * @defgroup core csplit Core
+ * @brief Core functions included in csplit
+ */
+
+/**
  * A single-header C library for string manipulation and splitting.
  * 
  * Author: Jakub Wlodek
@@ -41,35 +49,45 @@
 #include <stdlib.h>
 
 
-/* Enum type for error codes for csplit */
+/**
+ * Enum type for error codes for csplit
+ * @ingroup set
+ */
 typedef enum CSPLIT_ERROR {
-    CSPLIT_SUCCESS          = 0,    /* No Error */
-    CSPLIT_TOO_SHORT        = -1,    /* Input string is too short */
-    CSPLIT_NO_SUCH_INDEX    = -2,    /* Index out of range */
-    CSPLIT_UNIMPLEMENTED    = -3,    /* Function unimplemented */
-    CSPLIT_BUFF_EXCEEDED    = -4,    /* Buffer size exceeded */
+    CSPLIT_SUCCESS          = 0,     /**< No Error */
+    CSPLIT_TOO_SHORT        = -1,    /**< Input string is too short */
+    CSPLIT_NO_SUCH_INDEX    = -2,    /**< Index out of range */
+    CSPLIT_UNIMPLEMENTED    = -3,    /**< Function unimplemented */
+    CSPLIT_BUFF_EXCEEDED    = -4,    /**< Buffer size exceeded */
 } CSplitError_t;
 
 
-/* Struct for an individual string fragment result from csplit */
+/**
+ * Struct for an individual string fragment result from csplit
+ * @ingroup intern
+ */
 typedef struct CSPLIT_FRAGMENT {
-    char* text;                         /* Text of the fragment. */
-    struct CSPLIT_FRAGMENT* next;       /* Next fragment in the linked list */
-    struct CSPLIT_FRAGMENT* prev;       /* Previous fragment in the linked list */
+    char* text;                         /**< Text of the fragment. */
+    struct CSPLIT_FRAGMENT* next;       /**< Next fragment in the linked list */
+    struct CSPLIT_FRAGMENT* prev;       /**< Previous fragment in the linked list */
 } CSplitFragment_t;
 
 
-/* Struct that stores the csplit linked list */
+/**
+ * Struct that stores the csplit linked list
+ * @ingroup core
+ */
 typedef struct CSPLIT_LIST {
-    int num_elems;              /* Number of elements in the list */
-    size_t BUFF_SIZE;           /* Buffer size given to each fragment parsed - set at init. */
-    CSplitFragment_t* head;     /* Head of the linked list (first element) */
-    CSplitFragment_t* tail;     /* Tail of the linked list (last element) */
+    int num_elems;              /**< Number of elements in the list */
+    size_t BUFF_SIZE;           /**< Buffer size given to each fragment parsed - set at init. */
+    CSplitFragment_t* head;     /**< Head of the linked list (first element) */
+    CSplitFragment_t* tail;     /**< Tail of the linked list (last element) */
 } CSplitList_t;
 
 
 /**
- * Function for printing the csplit error cpde string. Only print for non-success code
+ * @breif Function for printing the csplit error cpde string. Only print for non-success code
+ * @ingroup set
  * 
  * @params[in]: err -> error code returned by csplit
  * @params[in]: fp  -> output file pointer (typically stderr or stdout)
@@ -99,7 +117,8 @@ void print_csplit_error(CSplitError_t err, FILE* fp){
 
 
 /**
- * Function for initializing a csplit list
+ * @breif Function for initializing a csplit list
+ * @ingroup set
  * 
  * @params[in]: buff_size   -> user set buffer size. Make sure this is large enough for your largest fragment
  * @return: list            -> an allocated csplit list
@@ -113,7 +132,8 @@ CSplitList_t* csplit_init_list(size_t buff_size){
 
 
 /**
- * Clears all memory for an allocated csplit list
+ * @breif Clears all memory for an allocated csplit list
+ * @ingroup set
  * 
  * @params[in]: list    -> a previously allocated csplit list to be freed
  */
@@ -130,8 +150,9 @@ void csplit_clear_list(CSplitList_t* list){
 
 
 /**
- * Function that pushes a new CSplitFragment to the end of the list, and allocates memory for the text,
+ * @breif Function that pushes a new CSplitFragment to the end of the list, and allocates memory for the text,
  * with size list->BUFF_SIZE
+ * @ingroup intern
  * 
  * @params[out]: list       -> The list with fragment appended to the tail
  * @params[in]: fragment    -> fragment to append to the list. fragment->text will be allocated based on list->BUFF_SIZE
@@ -161,7 +182,8 @@ CSplitError_t csplit_push_to_list(CSplitList_t* list, CSplitFragment_t* fragment
 
 
 /**
- * Function that prints information about a csplit list
+ * @breif Function that prints information about a csplit list
+ * @ingroup set
  * 
  * @params[in]: list    -> list for which to print info
  * @params[in]: fp      -> file pointer to print into.
@@ -179,7 +201,8 @@ void print_csplit_list_info(CSplitList_t* list, FILE* fp){
 
 
 /**
- * Function that prints information about a csplit fragment - intended for internal use only
+ * @breif Function that prints information about a csplit fragment - intended for internal use only
+ * @ingroup intern
  * 
  * @params[in]: fragment    -> fragment for which to print info
  * @params[in]: fp          -> file pointer to print into
@@ -193,7 +216,8 @@ void print_csplit_fragment_info(CSplitFragment_t* fragment, FILE* fp){
 
 
 /**
- * Function that returns the string fragment at a certain index in the list
+ * @breif Function that returns the string fragment at a certain index in the list
+ * @ingroup core
  * 
  * @params[in]: list    -> list generated by csplit
  * @params[in]: index   -> index to search for (can be negative for getting at index from back of list)
@@ -227,9 +251,9 @@ char* get_fragment_at_index(CSplitList_t* list, int index){
 
 
 /**
- * Function that converts a csplit list into an array if the user requires simpler
+ * @breif Function that converts a csplit list into an array if the user requires simpler
  * iteration
- * 
+ * @ingroup intern
  * DEPRACATED - should not be used
  * 
  * @params[in]: list    -> list resulting from a call to csplit
@@ -251,7 +275,8 @@ char** csplit_list_to_array(CSplitList_t* list){
 
 
 /**
- * Function that reverses the list generated by csplit
+ * @breif Function that reverses the list generated by csplit
+ * @ingroup set
  * 
  * @params[out]: list   -> list to reverse
  * @return: err         -> error code if there is an error
@@ -275,8 +300,9 @@ CSplitError_t reverse_csplit_list(CSplitList_t* list){
 
 
 /**
- * Function that strips a given string into an output string. Will remove whitespace character:
+ * @breif Function that strips a given string into an output string. Will remove whitespace character:
  * \n, \r, \t, space will be removed from the start and end of each string.
+ * @ingroup core
  * 
  * @params[in]: input_str   -> the input string to strip
  * @return: output_str      -> the string with whitespace removed from the ends. Must be freed.
@@ -313,8 +339,9 @@ char* csplit_strip(char* input_str){
 
 
 /**
- * Function that removes all whitespace characters of a given string into an output string.
+ * @breifFunction that removes all whitespace characters of a given string into an output string.
  * Note that resulting char* must be free'd after it is no longer used
+ * @ingroup core
  * 
  * @params[in]: input_str   -> the input string to strip
  * @return: output_str      -> the string with whitespace removed.
@@ -342,7 +369,8 @@ char* csplit_remove_whitespace(char* input_str){
 
 
 /**
- * Function that checks if a given string starts with another given string.
+ * @breif Function that checks if a given string starts with another given string.
+ * @ingroup core
  * 
  * @params[in]: input_str       -> string to check against
  * @params[in]: starts_with     -> string to try to match with start of input string
@@ -368,7 +396,8 @@ int csplit_startswith(char* input_str, char* starts_with){
 
 
 /**
- * Function that checks if a given string ends with another given string.
+ * @breif Function that checks if a given string ends with another given string.
+ * @ingroup core
  * 
  * @params[in]: input_str       -> string to check against
  * @params[in]: ends_with       -> string to try to match with end of input string
@@ -394,8 +423,9 @@ int csplit_endswith(char* input_str, char* ends_with){
 
 
 /**
- * Function that runs csplit on a particular character from the rear of the string.
+ * @breif Function that runs csplit on a particular character from the rear of the string.
  * Called if length of token string is 1, and max_splits is negative
+ * @ingroup intern
  * 
  * @params[out]: list       -> split input string into this list structure
  * @params[in]: input_str   -> input string
@@ -432,8 +462,9 @@ CSplitError_t csplit_rchar(CSplitList_t* list, char* input_str, char token, int 
 
 
 /**
- * Function that runs csplit on a particular character. Called if length of token string
+ * @breif Function that runs csplit on a particular character. Called if length of token string
  * is 1
+ * @ingroup intern
  * 
  * @params[out]: list       -> split input string into this list structure
  * @params[in]: input_str   -> input string
@@ -468,7 +499,8 @@ CSplitError_t csplit_char(CSplitList_t* list, char* input_str, char token, int m
 
 
 /**
- * Function that runs csplit on a particular string from the end of the input. Called if max_splits < 0
+ * @breif Function that runs csplit on a particular string from the end of the input. Called if max_splits < 0
+ * @ingroup intern
  * 
  * @params[out]: list       -> split input string into this list structure
  * @params[in]: input_str   -> input string
@@ -515,7 +547,8 @@ CSplitError_t csplit_rstr(CSplitList_t* list, char* input_str, char* token, int 
 
 
 /**
- * Function that splits a given input string based on another string.
+ * @breif Function that splits a given input string based on another string.
+ * @ingroup intern
  * 
  * @params[out]: list           -> output list splitting input str on string token
  * @params[in]: input_str       -> input string which will be split
@@ -552,8 +585,9 @@ CSplitError_t csplit_str(CSplitList_t* list, char* input_str, char* token, int m
 
 
 /**
- * Function that allows user to split based on a limited number of splits, either forward
+ * @breif Function that allows user to split based on a limited number of splits, either forward
  * or in reverse. A max_splits >= len(input_str) will guarantee all possible splits
+ * @ingroup core
  * 
  * @params[out]: list           -> output list splitting input str on string token
  * @params[in]: input_str       -> input string which will be split
@@ -580,8 +614,9 @@ CSplitError_t csplit_lim(CSplitList_t* list, char* input_str, char* token, int m
 
 
 /**
- * Top level csplit function call. Outputs a csplit list split on a string token. Calls
+ * @breif Top level csplit function call. Outputs a csplit list split on a string token. Calls
  * csplit_lim with max_splits = len(input_str), ensuring that all possible splits will be made.
+ * @ingroup core
  * 
  * @params[out]: list           -> output list splitting input str on string token
  * @params[in]: input_str       -> input string which will be split
@@ -594,7 +629,8 @@ CSplitError_t csplit(CSplitList_t* list, char* input_str, char* token){
 
 
 /**
- * Function that runs csplit and then reverses the output.
+ * @breif Function that runs csplit and then reverses the output.
+ * @ingroup core
  * 
  * @params[out]: output_list    -> output list splitting input str on string token
  * @params[in]: input_str       -> input string which will be split
