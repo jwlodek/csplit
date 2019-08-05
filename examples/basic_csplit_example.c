@@ -47,7 +47,7 @@ int main(int argc, char** argv){
     CSplitList_t* list = csplit_init_list(256);
 
     // split on the " " (space) character
-    CSplitError_t err = csplit(list, test_string, " ");
+    CSplitError_t err = csplit_max(list, test_string, " ", 3);
 
     // print the list of split fragments to stdout
     print_csplit_list_info(list, stdout);
