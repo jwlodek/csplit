@@ -24,7 +24,7 @@
 
 /**
  * 
- * A single-header C library for string splitting.
+ * A single-header C library for string manipulation and splitting.
  * 
  * Author: Jakub Wlodek
  * Created: 02-Aug-2019
@@ -177,6 +177,12 @@ void print_csplit_list_info(CSplitList_t* list, FILE* fp){
 }
 
 
+/**
+ * Function that prints information about a csplit fragment - intended for internal use only
+ * 
+ * @params[in]: fragment    -> fragment for which to print info
+ * @params[in]: fp          -> file pointer to print into
+ */
 void print_csplit_fragment_info(CSplitFragment_t* fragment, FILE* fp){
     if(fragment == NULL || fp == NULL) return;
     fprintf(fp, "Fragment has text %s\n", fragment->text);
@@ -223,7 +229,7 @@ char* get_fragment_at_index(CSplitList_t* list, int index){
  * Function that converts a csplit list into an array if the user requires simpler
  * iteration
  * 
- * DEPRACATED
+ * DEPRACATED - should not be used
  * 
  * @params[in]: list    -> list resulting from a call to csplit
  * @return: output_arr  -> an array of char* (strings) pulled from list, or NULL if num_elems is 0
@@ -393,6 +399,8 @@ int csplit_endswith(char* input_str, char* ends_with){
  * @params[out]: list       -> split input string into this list structure
  * @params[in]: input_str   -> input string
  * @params[in]: token       -> character on which to split
+ * @params[in]: max_splits  -> maximum number of splits. If negative will split from end of string
+ * @return:     err             -> error code if there was a problem with csplitting.
  */
 CSplitError_t csplit_rchar(CSplitList_t* list, char* input_str, char token, int max_splits){
     CSplitError_t err = CSPLIT_SUCCESS;
@@ -429,6 +437,8 @@ CSplitError_t csplit_rchar(CSplitList_t* list, char* input_str, char token, int 
  * @params[out]: list       -> split input string into this list structure
  * @params[in]: input_str   -> input string
  * @params[in]: token       -> character on which to split
+ * @params[in]: max_splits  -> maximum number of splits. If negative will split from end of string
+ * @return:     err             -> error code if there was a problem with csplitting.
  */
 CSplitError_t csplit_char(CSplitList_t* list, char* input_str, char token, int max_splits){
     if(max_splits < 0)
@@ -456,6 +466,15 @@ CSplitError_t csplit_char(CSplitList_t* list, char* input_str, char token, int m
 }
 
 
+/**
+ * Function that runs csplit on a particular string from the end of the input. Called if max_splits < 0
+ * 
+ * @params[out]: list       -> split input string into this list structure
+ * @params[in]: input_str   -> input string
+ * @params[in]: token       -> character on which to split
+ * @params[in]: max_splits  -> maximum number of splits. If negative will split from end of string
+ * @return:     err             -> error code if there was a problem with csplitting.
+ */
 CSplitError_t csplit_rstr(CSplitList_t* list, char* input_str, char* token, int max_splits){
     CSplitError_t err = CSPLIT_SUCCESS;
     int in_len = strlen(input_str);
