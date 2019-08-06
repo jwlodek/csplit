@@ -1,0 +1,12 @@
+language: c
+
+install: make
+
+compiler: gcc
+
+sudo: false
+
+script:
+  - cd tests
+  - ./initUnitTests.sh
+  - ./runUnitTests.sh
