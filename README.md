@@ -37,7 +37,7 @@ char* csplit_get_fragment_at_index(CSplitList_t* list, int index); /* Will retur
 char* csplit_strip(char* input_str); /* Strips whitespace from front and rear of string */
 int csplit_startswith(char* input_str, char* starts_with); /* Checks if string starts with given token. */
 ```
-and several other string utility/manipulation functions. Full documentation can be seen [here.](https://jwlodek.github.io/csplit)
+and several other string utility/manipulation functions. Full documentation can be seen [here.](https://jwlodek.github.io/csplit-docs/)
 
 ### Running Unit Tests
 
