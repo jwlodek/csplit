@@ -56,7 +56,7 @@ int main(int argc, char** argv){
             free(temp); /* Make sure to free stripped line */
 
             // print the split values
-            print_csplit_list_info(list, stdout);
+            csplit_print_list_info(list, stdout);
 
             // example iterating through resulting list and summing values read from .csv file
             CSplitFragment_t* current_fragment = list->head;

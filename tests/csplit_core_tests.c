@@ -91,28 +91,28 @@ void teardown_strings(void){
 
 /* Test for getting at index */
 Test(asserts, get_at_index_test, .init=setup, .fini=teardown){
-    char* temp = get_fragment_at_index(list, 2);
+    char* temp = csplit_get_fragment_at_index(list, 2);
     cr_assert(strcmp(temp, "Number2") == 0, "String at index not correct.");
 }
 
 
 /* Test for getting at index from reverse */
 Test(asserts, get_at_rindex_test, .init=setup, .fini=teardown){
-    char* temp = get_fragment_at_index(list, -1);
+    char* temp = csplit_get_fragment_at_index(list, -1);
     cr_assert(strcmp(temp, "Number4") == 0, "String at reverse index not correct.");
 }
 
 
 /* Test for getting at invalid index */
 Test(asserts, get_index_oob_test, .init=setup, .fini=teardown){
-    char* temp = get_fragment_at_index(list, 7);
+    char* temp = csplit_get_fragment_at_index(list, 7);
     cr_assert(temp == NULL, "String at index not correct.");
 }
 
 
 /* Test for getting at invalid index from reverse */
 Test(asserts, get_rindex_oob_test, .init=setup, .fini=teardown){
-    char* temp = get_fragment_at_index(list, -7);
+    char* temp = csplit_get_fragment_at_index(list, -7);
     cr_assert(temp == NULL, "String at index not correct.");
 }
 
@@ -124,7 +124,7 @@ Test(asserts, get_rindex_oob_test, .init=setup, .fini=teardown){
 
 /* Test for reversing a CSplitList */
 Test(asserts, reverse_list_test, .init=setup, .fini=teardown){
-    CSplitError_t err = reverse_csplit_list(list);
+    CSplitError_t err = csplit_reverse_list(list);
     cr_assert(err == CSPLIT_SUCCESS, "Reverse list failed.");
     int counter = 4;
     CSplitFragment_t* current_fragment = list->head;

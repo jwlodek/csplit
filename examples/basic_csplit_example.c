@@ -50,17 +50,17 @@ int main(int argc, char** argv){
     CSplitError_t err = csplit(list, test_string, " ");
 
     // print the list of split fragments to stdout
-    print_csplit_list_info(list, stdout);
+    csplit_print_list_info(list, stdout);
 
     // print a separator
     printf("----------------------------\n");
 
     // demo of getting fragment string at an index, 3 index will give us "you"
-    char* test_get_index = get_fragment_at_index(list, 3);
+    char* test_get_index = csplit_get_fragment_at_index(list, 3);
 
     // demo of getting fragment string using reverse index, -1 will give us the last
     // fragment, in this case "doing?"
-    char* test_get_r_index = get_fragment_at_index(list, -1);
+    char* test_get_r_index = csplit_get_fragment_at_index(list, -1);
 
     // print results
     printf("Get index: %s\n", test_get_index);

@@ -67,17 +67,17 @@ int main(int argc, char** argv){
             
             // print some info
             printf("Found config line:\n");
-            print_csplit_list_info(list, stdout);
+            csplit_print_list_info(list, stdout);
             
             // if we match one of our targets, copy the value (index 1) into the appropriate array
-            if(csplit_startswith(get_fragment_at_index(list, 0), "INSTALL_PATH") == 0){
-                strncpy(install_path, get_fragment_at_index(list, 1), sizeof(install_path));
+            if(csplit_startswith(csplit_get_fragment_at_index(list, 0), "INSTALL_PATH") == 0){
+                strncpy(install_path, csplit_get_fragment_at_index(list, 1), sizeof(install_path));
             }
-            else if(csplit_startswith(get_fragment_at_index(list, 0), "INSTALL_UTESTS") == 0){
-                strncpy(build_utests, get_fragment_at_index(list, 1), sizeof(build_utests));
+            else if(csplit_startswith(csplit_get_fragment_at_index(list, 0), "INSTALL_UTESTS") == 0){
+                strncpy(build_utests, csplit_get_fragment_at_index(list, 1), sizeof(build_utests));
             }
-            else if(csplit_startswith(get_fragment_at_index(list, 0), "BUILD_EXAMPLES") == 0){
-                strncpy(build_examples, get_fragment_at_index(list, 1), sizeof(build_examples));
+            else if(csplit_startswith(csplit_get_fragment_at_index(list, 0), "BUILD_EXAMPLES") == 0){
+                strncpy(build_examples, csplit_get_fragment_at_index(list, 1), sizeof(build_examples));
             }
             
             // free list memory
