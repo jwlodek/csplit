@@ -1,4 +1,8 @@
-# csplit
+<p align="center">
+    <img src="docs/assets/csplit_logo.png">
+</p>
+
+# csplit ![](https://travis-ci.org/jwlodek/csplit.svg?branch=master)
 
 A single header C library that can be used to easily handle splitting strings and other string operations in C.
 
@@ -43,7 +47,7 @@ Unit testing for `csplit` is done with the help of the [Criterion](https://githu
 cd tests
 ./initUnitTests.sh
 ```
-to initialize the Criterion](https://github.com/Snaipe/Criterion) Library, and then
+to initialize the [Criterion](https://github.com/Snaipe/Criterion) Library, and then
 ```
 ./runUnitTests.sh
 ```
@@ -59,7 +63,7 @@ or
 ```
 make clean debug
 ```
-to have access to gdb debugging of the examples.
+to have access to gdb debugging of the examples. This has been tested on linux, as well as on Windows with gcc and make included in MinGW.
 
 #### Basic Example
 
