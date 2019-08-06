@@ -56,7 +56,7 @@ int main(int argc, char** argv){
         
         // use csplit and string functions to remove comments and empty lines
         if(csplit_startswith(line_buff, "#") != 0 && strlen(line_buff) > 1){
-            CSplitList_t* list = csplit_init_list(128);
+            CSplitList_t* list = csplit_init_list();
             
             // initialize list, strip of whitespace, and split on '=' character.
             char* temp = csplit_strip(line_buff);

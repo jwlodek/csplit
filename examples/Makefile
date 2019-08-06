@@ -1,6 +1,6 @@
 all:
 	gcc basic_csplit_example.c -I../. -o basic_csplit_example
-	gcc reading_csv_file.c -I../. -o reading_csv_example_
+	gcc reading_csv_file.c -I../. -o reading_csv_example
 	gcc str_processing_example.c -I../. -o str_processing_example
 	gcc read_configure_example.c -I../. -o read_configure_example
 

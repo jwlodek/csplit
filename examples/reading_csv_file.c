@@ -49,8 +49,8 @@ int main(int argc, char** argv){
 
         // ignore lines that are blank
         if(strlen(buffer) > 1){
-            // initialize the list, strip whitespace, and call csplit on commas (buffsize=256)
-            CSplitList_t* list = csplit_init_list(256);
+            // initialize the list, strip whitespace, and call csplit on commas
+            CSplitList_t* list = csplit_init_list();
             char* temp = csplit_strip(buffer);
             CSplitError_t err = csplit(list, temp, ",");
             free(temp); /* Make sure to free stripped line */

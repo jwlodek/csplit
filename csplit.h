@@ -51,7 +51,7 @@ extern "C" {
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
+#include <ctype.h>
 
 #ifdef _MSC_VER
 # define _CSPLIT_FUNC static __inline
@@ -86,7 +86,8 @@ typedef struct CSPLIT_FRAGMENT {
 
 
 /**
- * Struct that stores the csplit linked list
+ * Struct that stores the csplit linked list. Can be used as an arbitrary linked list
+ * for strings, but is intended for use with csplit strtok replacement functions
  * @ingroup core
  */
 typedef struct CSPLIT_LIST {
@@ -96,36 +97,60 @@ typedef struct CSPLIT_LIST {
 } CSplitList_t;
 
 
-/**
- * @brief Function for printing the csplit error cpde string. Only print for non-success code
- * @ingroup set
- * 
- * @params[in]: err -> error code returned by csplit
- * @params[in]: fp  -> output file pointer (typically stderr or stdout)
- */
+/* Function Declarations */
+
 _CSPLIT_FUNC
-void csplit_print_error(CSplitError_t err, FILE* fp){
-    if(err == CSPLIT_SUCCESS) return;
-    const char* err_message;
-    switch(err){
-        case CSPLIT_TOO_SHORT:
-            err_message = "Input string too short";
-            break;
-        case CSPLIT_NO_SUCH_INDEX:
-            err_message = "Index out of range";
-            break;
-        case CSPLIT_UNIMPLEMENTED:
-            err_message = "Unimplemented";
-            break;
-        case CSPLIT_BUFF_EXCEEDED:
-            err_message = "Buffer size exceeded";
-            break;
-        default:
-            err_message = "Unknown Error";
-            break;
-    }
-    fprintf(fp, "**CSPLIT ERROR**: %s\n", err_message);
-}
+CSplitList_t* csplit_init_list();
+
+_CSPLIT_FUNC
+void csplit_clear_list(CSplitList_t* list);
+
+_CSPLIT_FUNC
+CSplitError_t csplit_push_to_list(CSplitList_t* list, CSplitFragment_t* fragment, size_t buff_size);
+
+_CSPLIT_FUNC
+void csplit_print_list_info(CSplitList_t* list, FILE* fp);
+
+#ifdef CSPLIT_DEBUG
+_CSPLIT_FUNC
+void print_csplit_fragment_info(CSplitFragment_t* fragment, FILE* fp);
+#endif
+
+_CSPLIT_FUNC
+char* csplit_get_fragment_at_index(CSplitList_t* list, int index);
+
+_CSPLIT_FUNC
+CSplitError_t csplit_reverse_list(CSplitList_t* list);
+
+_CSPLIT_FUNC
+char* csplit_strip(char* input_str);
+
+_CSPLIT_FUNC
+char* csplit_remove_whitespace(char* input_str);
+
+_CSPLIT_FUNC
+int csplit_startswith(char* input_str, char* starts_with);
+
+_CSPLIT_FUNC
+int csplit_endswith(char* input_str, char* ends_with);
+
+_CSPLIT_FUNC
+CSplitError_t csplit_rstr(CSplitList_t* list, char* input_str, char* token, int max_splits);
+
+_CSPLIT_FUNC
+CSplitError_t csplit_str(CSplitList_t* list, char* input_str, char* token, int max_splits);
+
+_CSPLIT_FUNC
+CSplitError_t csplit_lim(CSplitList_t* list, char* input_str, char* token, int max_splits);
+
+_CSPLIT_FUNC
+CSplitError_t csplit(CSplitList_t* list, char* input_str, char* token);
+
+_CSPLIT_FUNC
+CSplitError_t rcsplit(CSplitList_t* output_list, char* input_str, char* token);
+
+
+/* Function Definitions */
 
 
 /**
@@ -310,26 +335,19 @@ char* csplit_strip(char* input_str){
     if(input_str == NULL)
         output_str = NULL;
     else{
-        // allocate enough space. At most we require len of input space
         int len = strlen(input_str);
-        output_str = (char*) calloc(1, len);
-        int counter = 0;
-        int output_counter = 0;
-        int temp = len - 1;
-        int first_found = 0;
-        // count down how many chars we don't want from rear of string
-        while(input_str[temp] == ' ' || input_str[temp] == '\n' || input_str[temp] == '\r' || input_str[temp] == '\t'){
-            temp = temp - 1;
+        char* end = input_str + len - 1;
+        char* start = input_str;
+        while(isspace(*start)){
+            if(*start == '\0' || start == end) return NULL;
+            else start++;
         }
-        // then count up to that point, skipping whitespace until first char found
-        while(counter <= temp){
-            if(input_str[counter] != ' ' && input_str[counter] != '\n' && input_str[counter] != '\r' && input_str[counter] != '\t' || first_found != 0){
-                first_found = 1;
-                output_str[output_counter] = input_str[counter];
-                output_counter++;
-            }
-            counter++;
-        }
+        while(isspace(*end))
+            end--;
+
+        size_t buff_size = end - start + 1;
+        output_str = (char*) calloc(1, buff_size + 1);
+        strncpy(output_str, start, buff_size);
     }
     return output_str;
 }
@@ -355,7 +373,7 @@ char* csplit_remove_whitespace(char* input_str){
         int output_counter = 0;
         // read through but don't copy whitespace
         while(counter < len){
-            if(input_str[counter] != ' ' && input_str[counter] != '\n' && input_str[counter] != '\r' && input_str[counter] != '\t'){
+            if(!isspace(input_str[counter])){
                 output_str[output_counter] = input_str[counter];
                 output_counter++;
             }

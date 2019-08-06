@@ -39,14 +39,14 @@
 
 int main(int argc, char** argv){
     // our test string
-    char* test_string = "Hello Cool World!";
+    char* test_string = "Hello how are you doing?";
     printf("Our demo string is: %s\n", test_string);
 
     // initialize our output list. 
     CSplitList_t* list = csplit_init_list();
 
     // split on the " " (space) character
-    CSplitError_t err = csplit_lim(list, test_string, " ", -1);
+    CSplitError_t err = csplit(list, test_string, " ");
 
     // print the list of split fragments to stdout
     csplit_print_list_info(list, stdout);
