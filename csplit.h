@@ -378,13 +378,9 @@ char* csplit_remove_whitespace(char* input_str){
  */
 _CSPLIT_FUNC
 int csplit_startswith(char* input_str, char* starts_with){
-    if(input_str == NULL || starts_with == NULL){
-        return -2;
-    }
-    else{
-        if(strstr(input_str, starts_with) == input_str) return 0;
-        return -1;
-    }
+    if(input_str == NULL || starts_with == NULL) return -2;
+    else if(strstr(input_str, starts_with) == input_str) return 0;
+    else return -1;
 }
 
 
@@ -405,92 +401,9 @@ int csplit_endswith(char* input_str, char* ends_with){
         int ewith_len = strlen(ends_with);
         int istr_len = strlen(input_str);
         if(ewith_len > istr_len) return -1;
-        else{
-            int i;
-            for(i = 0; i < ewith_len; i++){
-                if(ends_with[ewith_len -1 -i] != input_str[istr_len -1 -i]) return -1;
-            }
-        }
+        else if(strcmp(input_str + istr_len - ewith_len, ends_with) == 0) return 0;
+        else return -1;
     }
-    return 0;
-}
-
-
-/**
- * @brief Function that runs csplit on a particular character from the rear of the string.
- * Called if length of token string is 1, and max_splits is negative
- * @ingroup intern
- * 
- * @params[out]: list       -> split input string into this list structure
- * @params[in]: input_str   -> input string
- * @params[in]: token       -> character on which to split
- * @params[in]: max_splits  -> maximum number of splits. If negative will split from end of string
- * @return:     err             -> error code if there was a problem with csplitting.
- */
-_CSPLIT_FUNC
-CSplitError_t csplit_rchar(CSplitList_t* list, char* input_str, char token, int max_splits){
-    CSplitError_t err = CSPLIT_SUCCESS;
-    int len = strlen(input_str);
-    int counter = len - 1;
-    int num_splits = 0;
-    while(counter >= 0){
-        CSplitFragment_t* fragment = (CSplitFragment_t*) calloc(1, sizeof(CSplitFragment_t));
-        err = csplit_push_to_list(list, fragment);
-        int fragment_counter = 0;
-        int temp = 0;
-        while((input_str[counter] != token || num_splits <= max_splits) && counter >= 0){
-            counter--;
-            temp++;
-            if(temp > list->BUFF_SIZE)
-                return CSPLIT_BUFF_EXCEEDED;
-        }
-        while(fragment_counter < temp){
-            fragment->text[fragment_counter] = input_str[counter + 1 + fragment_counter];
-            fragment_counter++;
-        }
-        num_splits--;
-        counter--;
-    }
-    err = csplit_reverse_list(list);
-    return err;
-}
-
-
-/**
- * @brief Function that runs csplit on a particular character. Called if length of token string
- * is 1
- * @ingroup intern
- * 
- * @params[out]: list       -> split input string into this list structure
- * @params[in]: input_str   -> input string
- * @params[in]: token       -> character on which to split
- * @params[in]: max_splits  -> maximum number of splits. If negative will split from end of string
- * @return:     err             -> error code if there was a problem with csplitting.
- */
-_CSPLIT_FUNC
-CSplitError_t csplit_char(CSplitList_t* list, char* input_str, char token, int max_splits){
-    if(max_splits < 0)
-        return csplit_rchar(list, input_str, token, max_splits);
-    CSplitError_t err = CSPLIT_SUCCESS;
-    int counter = 0;
-    int len = strlen(input_str);
-    int num_splits = 0;
-    while(counter < len){
-        CSplitFragment_t* fragment = (CSplitFragment_t*) calloc(1, sizeof(CSplitFragment_t));
-        err = csplit_push_to_list(list, fragment);
-        if(err != CSPLIT_SUCCESS) return err;
-        int fragment_counter = 0;
-        while((input_str[counter] != token || num_splits >= max_splits) && counter < len){
-            fragment->text[fragment_counter] = input_str[counter];
-            counter++;
-            fragment_counter++;
-            if(fragment_counter > list->BUFF_SIZE)
-                return CSPLIT_BUFF_EXCEEDED;
-        }
-        num_splits++;
-        counter++;
-    }
-    return err;
 }
 
 
@@ -599,10 +512,6 @@ CSplitError_t csplit_lim(CSplitList_t* list, char* input_str, char* token, int m
     // first check to see if input string is valid and token is valid
     if(strlen(input_str) < 1 || strlen(token) < 1){
         err = CSPLIT_TOO_SHORT;
-    }
-    else if(strlen(token) == 1){
-        // if token is one character, we split on that one character
-        err = csplit_char(list, input_str, token[0], max_splits);
     }
     else{
         // otherwise we split on the given string
