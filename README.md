@@ -33,8 +33,7 @@ where max_splits is the maximum number of splits allowed. If max_splits is negat
 
 There are also some utility functions included as well:
 ```C
-char* get_fragment_at_index(CSplitList_t* list, int index); /* Will return text at given index in list */
-CSplitError_t reverse_csplit_list(CSplitList_t* list); /* Reverses the list */
+char* csplit_get_fragment_at_index(CSplitList_t* list, int index); /* Will return text at given index in list */
 char* csplit_strip(char* input_str); /* Strips whitespace from front and rear of string */
 int csplit_startswith(char* input_str, char* starts_with); /* Checks if string starts with given token. */
 ```
@@ -79,15 +78,14 @@ int main(int argc, char** argv){
     char* test_string = "Hello how are you doing?";
     printf("Our demo string is: %s\n", test_string);
 
-    // initialize our output list. We pass 256 as our buffer size, meaning that our fragments cannot 
-    // be longer than 256 characters in length.
-    CSplitList_t* list = csplit_init_list(256);
+    // initialize our output list.
+    CSplitList_t* list = csplit_init_list();
 
     // split on the " " (space) character
     CSplitError_t err = csplit(list, test_string, " ");
 
     // print the list of split fragments to stdout
-    print_csplit_list_info(list, stdout);
+    csplit_print_list_info(list, stdout);
 
     // print a separator
     printf("----------------------------\n");
@@ -131,8 +129,8 @@ int main(int argc, char** argv){
 
         // ignore lines that are blank
         if(strlen(buffer) > 1){
-            // initialize the list, strip whitespace, and call csplit on commas (buffsize=256)
-            CSplitList_t* list = csplit_init_list(256);
+            // initialize the list, strip whitespace, and call csplit on commas
+            CSplitList_t* list = csplit_init_list();
             char* temp = csplit_strip(buffer);
             CSplitError_t err = csplit(list, temp, ",");
             free(temp); /* Make sure to free stripped line */

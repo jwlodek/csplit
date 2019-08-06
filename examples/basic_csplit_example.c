@@ -42,9 +42,8 @@ int main(int argc, char** argv){
     char* test_string = "Hello how are you doing?";
     printf("Our demo string is: %s\n", test_string);
 
-    // initialize our output list. We pass 256 as our buffer size, meaning that our fragments cannot 
-    // be longer than 256 characters in length.
-    CSplitList_t* list = csplit_init_list(256);
+    // initialize our output list. 
+    CSplitList_t* list = csplit_init_list();
 
     // split on the " " (space) character
     CSplitError_t err = csplit(list, test_string, " ");

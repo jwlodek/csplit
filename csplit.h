@@ -51,7 +51,7 @@ extern "C" {
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
+#include <ctype.h>
 
 #ifdef _MSC_VER
 # define _CSPLIT_FUNC static __inline
@@ -86,47 +86,71 @@ typedef struct CSPLIT_FRAGMENT {
 
 
 /**
- * Struct that stores the csplit linked list
+ * Struct that stores the csplit linked list. Can be used as an arbitrary linked list
+ * for strings, but is intended for use with csplit strtok replacement functions
  * @ingroup core
  */
 typedef struct CSPLIT_LIST {
     int num_elems;              /**< Number of elements in the list */
-    size_t BUFF_SIZE;           /**< Buffer size given to each fragment parsed - set at init. */
     CSplitFragment_t* head;     /**< Head of the linked list (first element) */
     CSplitFragment_t* tail;     /**< Tail of the linked list (last element) */
 } CSplitList_t;
 
 
-/**
- * @brief Function for printing the csplit error cpde string. Only print for non-success code
- * @ingroup set
- * 
- * @params[in]: err -> error code returned by csplit
- * @params[in]: fp  -> output file pointer (typically stderr or stdout)
- */
+/* Function Declarations */
+
 _CSPLIT_FUNC
-void csplit_print_error(CSplitError_t err, FILE* fp){
-    if(err == CSPLIT_SUCCESS) return;
-    const char* err_message;
-    switch(err){
-        case CSPLIT_TOO_SHORT:
-            err_message = "Input string too short";
-            break;
-        case CSPLIT_NO_SUCH_INDEX:
-            err_message = "Index out of range";
-            break;
-        case CSPLIT_UNIMPLEMENTED:
-            err_message = "Unimplemented";
-            break;
-        case CSPLIT_BUFF_EXCEEDED:
-            err_message = "Buffer size exceeded";
-            break;
-        default:
-            err_message = "Unknown Error";
-            break;
-    }
-    fprintf(fp, "**CSPLIT ERROR**: %s\n", err_message);
-}
+CSplitList_t* csplit_init_list();
+
+_CSPLIT_FUNC
+void csplit_clear_list(CSplitList_t* list);
+
+_CSPLIT_FUNC
+CSplitError_t csplit_push_to_list(CSplitList_t* list, CSplitFragment_t* fragment, size_t buff_size);
+
+_CSPLIT_FUNC
+void csplit_print_list_info(CSplitList_t* list, FILE* fp);
+
+#ifdef CSPLIT_DEBUG
+_CSPLIT_FUNC
+void print_csplit_fragment_info(CSplitFragment_t* fragment, FILE* fp);
+#endif
+
+_CSPLIT_FUNC
+char* csplit_get_fragment_at_index(CSplitList_t* list, int index);
+
+_CSPLIT_FUNC
+CSplitError_t csplit_reverse_list(CSplitList_t* list);
+
+_CSPLIT_FUNC
+char* csplit_strip(char* input_str);
+
+_CSPLIT_FUNC
+char* csplit_remove_whitespace(char* input_str);
+
+_CSPLIT_FUNC
+int csplit_startswith(char* input_str, char* starts_with);
+
+_CSPLIT_FUNC
+int csplit_endswith(char* input_str, char* ends_with);
+
+_CSPLIT_FUNC
+CSplitError_t csplit_rstr(CSplitList_t* list, char* input_str, char* token, int max_splits);
+
+_CSPLIT_FUNC
+CSplitError_t csplit_str(CSplitList_t* list, char* input_str, char* token, int max_splits);
+
+_CSPLIT_FUNC
+CSplitError_t csplit_lim(CSplitList_t* list, char* input_str, char* token, int max_splits);
+
+_CSPLIT_FUNC
+CSplitError_t csplit(CSplitList_t* list, char* input_str, char* token);
+
+_CSPLIT_FUNC
+CSplitError_t rcsplit(CSplitList_t* output_list, char* input_str, char* token);
+
+
+/* Function Definitions */
 
 
 /**
@@ -137,9 +161,8 @@ void csplit_print_error(CSplitError_t err, FILE* fp){
  * @return: list            -> an allocated csplit list
  */
 _CSPLIT_FUNC
-CSplitList_t* csplit_init_list(size_t buff_size){
+CSplitList_t* csplit_init_list(){
     CSplitList_t* list = (CSplitList_t*) calloc(1, sizeof(CSplitList_t));
-    list->BUFF_SIZE = buff_size;
     list->num_elems = 0;
     return list;
 }
@@ -173,7 +196,7 @@ void csplit_clear_list(CSplitList_t* list){
  * @params[in]: fragment    -> fragment to append to the list. fragment->text will be allocated based on list->BUFF_SIZE
  */
 _CSPLIT_FUNC
-CSplitError_t csplit_push_to_list(CSplitList_t* list, CSplitFragment_t* fragment){
+CSplitError_t csplit_push_to_list(CSplitList_t* list, CSplitFragment_t* fragment, size_t buff_size){
     // first make sure neither is null
     if(list == NULL || fragment == NULL){
         return CSPLIT_TOO_SHORT;
@@ -191,7 +214,7 @@ CSplitError_t csplit_push_to_list(CSplitList_t* list, CSplitFragment_t* fragment
             list->tail = fragment;
         }
         // allocate fragment text field
-        fragment->text = (char*) calloc(1, list->BUFF_SIZE);
+        fragment->text = (char*) calloc(1, buff_size);
     }
     return CSPLIT_SUCCESS;
 }
@@ -211,7 +234,7 @@ void csplit_print_list_info(CSplitList_t* list, FILE* fp){
     fprintf(fp, "Supports indexes -%d to %d.\n", list->num_elems, list->num_elems -1);
     CSplitFragment_t* current_fragment = list->head;
     while(current_fragment != NULL){
-        fprintf(fp, "%s\n", current_fragment->text);
+        fprintf(fp, "--%s--\n", current_fragment->text);
         current_fragment = current_fragment->next;
     }
 }
@@ -312,26 +335,19 @@ char* csplit_strip(char* input_str){
     if(input_str == NULL)
         output_str = NULL;
     else{
-        // allocate enough space. At most we require len of input space
         int len = strlen(input_str);
-        output_str = (char*) calloc(1, len);
-        int counter = 0;
-        int output_counter = 0;
-        int temp = len - 1;
-        int first_found = 0;
-        // count down how many chars we don't want from rear of string
-        while(input_str[temp] == ' ' || input_str[temp] == '\n' || input_str[temp] == '\r' || input_str[temp] == '\t'){
-            temp = temp - 1;
+        char* end = input_str + len - 1;
+        char* start = input_str;
+        while(isspace(*start)){
+            if(*start == '\0' || start == end) return NULL;
+            else start++;
         }
-        // then count up to that point, skipping whitespace until first char found
-        while(counter <= temp){
-            if(input_str[counter] != ' ' && input_str[counter] != '\n' && input_str[counter] != '\r' && input_str[counter] != '\t' || first_found != 0){
-                first_found = 1;
-                output_str[output_counter] = input_str[counter];
-                output_counter++;
-            }
-            counter++;
-        }
+        while(isspace(*end))
+            end--;
+
+        size_t buff_size = end - start + 1;
+        output_str = (char*) calloc(1, buff_size + 1);
+        strncpy(output_str, start, buff_size);
     }
     return output_str;
 }
@@ -357,7 +373,7 @@ char* csplit_remove_whitespace(char* input_str){
         int output_counter = 0;
         // read through but don't copy whitespace
         while(counter < len){
-            if(input_str[counter] != ' ' && input_str[counter] != '\n' && input_str[counter] != '\r' && input_str[counter] != '\t'){
+            if(!isspace(input_str[counter])){
                 output_str[output_counter] = input_str[counter];
                 output_counter++;
             }
@@ -421,33 +437,29 @@ _CSPLIT_FUNC
 CSplitError_t csplit_rstr(CSplitList_t* list, char* input_str, char* token, int max_splits){
     CSplitError_t err = CSPLIT_SUCCESS;
     int in_len = strlen(input_str);
-    int counter = in_len - 1;
+    int counter = 0;
     int num_splits = 0;
     int token_len = strlen(token);
-    while(counter >= 0){
+    char* current_location = input_str;
+    char* arr[in_len];
+    while((arr[counter] = strstr(current_location, token)) != NULL){
+        current_location = arr[counter] + 1;
+        counter++;
+    }
+    char* last_location = input_str + in_len;
+    while(counter >= 0 && num_splits >= max_splits){
+        current_location = arr[counter - 1] + token_len;
         CSplitFragment_t* fragment = (CSplitFragment_t*) calloc(1, sizeof(CSplitFragment_t));
-        err = csplit_push_to_list(list, fragment);
-        int fragment_counter = 0;
-        int temp = 0;
-        while((csplit_startswith(input_str + counter, token) != 0 || num_splits <= max_splits) && counter >= 0){
-            counter--;
-            temp++;
-            if(temp > list->BUFF_SIZE)
-                return CSPLIT_BUFF_EXCEEDED;
+        size_t req_buff_size;
+        if(num_splits == max_splits || counter == 0){
+            req_buff_size = in_len - strlen(last_location);
+            current_location = input_str;
         }
-        int wasTokenFound = csplit_startswith(input_str + counter, token);
-        if(wasTokenFound == 0){
-            temp = temp - token_len + 1;
-        }
-        while(fragment_counter < temp){
-            if(wasTokenFound == 0){
-                fragment->text[fragment_counter] = input_str[counter + fragment_counter + token_len];
-            }
-            else{
-                fragment->text[fragment_counter] = input_str[counter + 1 + fragment_counter];
-            }
-            fragment_counter++;
-        }
+        else
+            req_buff_size = last_location - current_location;
+        err = csplit_push_to_list(list, fragment, req_buff_size);
+        strncpy(fragment->text, current_location, req_buff_size);
+        last_location = current_location - token_len;
         num_splits--;
         counter--;
     }
@@ -471,24 +483,29 @@ CSplitError_t csplit_str(CSplitList_t* list, char* input_str, char* token, int m
     if(max_splits < 0)
         return csplit_rstr(list, input_str, token, max_splits);
     CSplitError_t err = CSPLIT_SUCCESS;
-    int counter = 0;
     int in_len = strlen(input_str);
     int num_splits = 0;
     int token_len = strlen(token);
-    while(counter < in_len){
+    char* current_location = input_str;
+    char* next_location;
+
+    while(current_location != NULL && num_splits <= max_splits){
         CSplitFragment_t* fragment = (CSplitFragment_t*) calloc(1, sizeof(CSplitFragment_t));
-        err = csplit_push_to_list(list, fragment);
-        if(err != CSPLIT_SUCCESS) return err;
-        int fragment_counter = 0;
-        while((csplit_startswith(input_str + counter, token)!= 0 || num_splits >= max_splits) && counter < in_len){
-            fragment->text[fragment_counter] = input_str[counter];
-            counter++;
-            fragment_counter++;
-            if(fragment_counter > list->BUFF_SIZE)
-                return CSPLIT_BUFF_EXCEEDED;
+        next_location = strstr(current_location, token);
+        size_t req_buff_size;
+        if(next_location == NULL || (num_splits == max_splits))
+            req_buff_size = in_len - (current_location - input_str);
+        else if(next_location != NULL)
+            req_buff_size = next_location - current_location;
+        err = csplit_push_to_list(list, fragment, req_buff_size);
+        strncpy(fragment->text, current_location, req_buff_size);
+        if(next_location != NULL)
+            current_location = next_location + token_len;
+        else{
+
+            current_location = next_location;
         }
         num_splits++;
-        counter = counter + token_len;
     }
     return err;
 }

@@ -62,7 +62,7 @@ void setup(void){
     int i;
     for(i=0; i< 5; i++){
         CSplitFragment_t* current_fragment =  (CSplitFragment_t*) calloc(1, sizeof(CSplitFragment_t));
-        csplit_push_to_list(list, current_fragment);
+        csplit_push_to_list(list, current_fragment, 1000);
         sprintf(current_fragment->text, "Number%d", i);
     }
 }
@@ -257,7 +257,7 @@ Test(asserts, csplit_char_single_test, .init=setup_strings, .fini=teardown_strin
 }
 
 /* Test reverse split on single split */
-Test(asserts, csplit_char_rsingle_test, .init=setup_strings, .fini=teardown_strings){
+Test(asserts, csplit_rchar_single_test, .init=setup_strings, .fini=teardown_strings){
     list = csplit_init_list(256);
     char* short_test_str = "Hello Cool World!";
     CSplitError_t err = csplit_lim(list, short_test_str, " ", -1);
