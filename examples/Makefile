@@ -1,14 +1,24 @@
+#
+# Example builder Makefile. 
+# Please edit the below common parameters for compilation
+#
+
+CC=gcc
+IDIR=../.
+CFLAGS=-I$(IDIR)
+DEBUG_FLAGS=-D CSPLIT_DEBUG -g
+
 all:
-	gcc basic_csplit_example.c -I../. -o basic_csplit_example
-	gcc reading_csv_file.c -I../. -o reading_csv_example
-	gcc str_processing_example.c -I../. -o str_processing_example
-	gcc read_configure_example.c -I../. -o read_configure_example
+	$(CC) basic_csplit_example.c $(CFLAGS) -o basic_csplit_example
+	$(CC) reading_csv_file.c $(CFLAGS) -o reading_csv_example
+	$(CC) str_processing_example.c $(CFLAGS) -o str_processing_example
+	$(CC) read_configure_example.c $(CFLAGS) -o read_configure_example
 
 debug:
-	gcc basic_csplit_example.c -I../. -o basic_csplit_example_db -g
-	gcc reading_csv_file.c -I../. -o reading_csv_example_db -g
-	gcc str_processing_example.c -I../. -o str_processing_example_db -g
-	gcc read_configure_example.c -I../. -o read_configure_example_db -g
+	$(CC) $(DEBUG_FLAGS) basic_csplit_example.c $(CFLAGS) -o basic_csplit_example_db
+	$(CC) $(DEBUG_FLAGS) reading_csv_file.c $(CFLAGS) -o reading_csv_example_db
+	$(CC) $(DEBUG_FLAGS) str_processing_example.c $(CFLAGS) -o str_processing_example_db
+	$(CC) $(DEBUG_FLAGS) read_configure_example.c $(CFLAGS) -o read_configure_example_db
 
 clean:
 	rm -f basic_csplit_example
