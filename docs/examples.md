@@ -51,6 +51,21 @@ int main(int argc, char** argv){
     csplit_clear_list(list);
 }
 ```
+Output from running the above basic example:
+```
+jwlodek@HP-Z6-G4-Workstation:~/Documents/csplit/examples$ ./basic_csplit_example 
+Our demo string is: Hello how are you doing?
+List contains 5 elements
+Supports indexes -5 to 4.
+--Hello--
+--how--
+--are--
+--you--
+--doing?--
+----------------------------
+Get index: you
+Get reverse index: doing?
+```
 
 #### .csv reading example
 
@@ -103,6 +118,55 @@ int main(int argc, char** argv){
     return 0;
 }
 ```
+When run on input file:
+```
+jwlodek@HP-Z6-G4-Workstation:~/Documents/csplit/examples$ more exampleFiles/test.csv 
+5,6,2,4,9
+3,0,1,4,2
+2,7,2,1
+3,8,4,7,10,1,3
+```
+The above example produces the following output:
+```
+jwlodek@HP-Z6-G4-Workstation:~/Documents/csplit/examples$ ./reading_csv_example 
+List contains 5 elements
+Supports indexes -5 to 4.
+--5--
+--6--
+--2--
+--4--
+--9--
+The sum of the elements in the line = 26
+----------------------
+List contains 5 elements
+Supports indexes -5 to 4.
+--3--
+--0--
+--1--
+--4--
+--2--
+The sum of the elements in the line = 10
+----------------------
+List contains 4 elements
+Supports indexes -4 to 3.
+--2--
+--7--
+--2--
+--1--
+The sum of the elements in the line = 12
+----------------------
+List contains 7 elements
+Supports indexes -7 to 6.
+--3--
+--8--
+--4--
+--7--
+--10--
+--1--
+--3--
+The sum of the elements in the line = 36
+----------------------
+```
 
 ### Basic string operations example
 
@@ -146,6 +210,18 @@ int main(int argc, char** argv){
     free(stripped_str);
     free(no_whitespace);
 }
+```
+If we run the above example, we get:
+```
+jwlodek@HP-Z6-G4-Workstation:~/Documents/csplit/examples$ ./str_processing_example 
+Our demo string is: --Hello how are you doing?
+
+--
+The stripped string is --Hello how are you doing?--
+Note the disappeared newline characters.
+The input started with 'Hello'
+After stripping away newlines, the string ends with 'doing?'
+The input string without any whitespace: --Hellohowareyoudoing?--
 ```
 
 ### Custom configure example
@@ -211,5 +287,26 @@ int main(int argc, char** argv){
     printf("INSTALL_LOCATION: %s, INSTALL_UTESTS: %s, BUILD_EXAMPLES: %s\n", install_path, build_utests, build_examples);
     return 0;
 }
+```
+If we run the example on a simple example `CONFIGURE` file:
+```
+jwlodek@HP-Z6-G4-Workstation:~/Documents/csplit/examples$ ./read_configure_example 
+Found config line:
+List contains 2 elements
+Supports indexes -2 to 1.
+--INSTALL_PATH--
+--/home/username--
+Found config line:
+List contains 2 elements
+Supports indexes -2 to 1.
+--INSTALL_UTESTS--
+--YES--
+Found config line:
+List contains 2 elements
+Supports indexes -2 to 1.
+--BUILD_EXAMPLES--
+--NO--
+Configuration read from CONFIGURE file is:
+INSTALL_LOCATION: /home/username, INSTALL_UTESTS: YES, BUILD_EXAMPLES: NO
 ```
 
