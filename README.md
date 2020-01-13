@@ -9,7 +9,9 @@ A single header C library that can be used to easily handle splitting strings an
 ### Installation
 
 Because csplit is a single-header library, all you need to do is copy the `csplit.h` file into your project, and
-include it at the top of your source file in which you would like to use it. Clone this repository with:
+include it at the top of your source file in which you would like to use it. You can get this file by via the 
+appropriate link in the [releases](https://github.com/jwlodek/csplit/releases) tab, or by cloning the 
+entire repository as follows:
 ```
 git clone https://github.com/jwlodek/csplit
 ```
