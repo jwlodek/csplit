@@ -1,8 +1,0 @@
-language: c
-
-compiler: gcc
-
-script:
-  - cd tests
-  - ./initUnitTests.sh
-  - ./runUnitTests.sh
