@@ -2,7 +2,7 @@
     <img src="docs/assets/csplit_logo.png">
 </p>
 
-# csplit ![](https://travis-ci.org/jwlodek/csplit.svg?branch=master)
+# csplit [![Tests](https://github.com/jwlodek/csplit/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/jwlodek/csplit/actions/workflows/unit-tests.yml)
 
 A single header C library that can be used to easily handle splitting strings and other string operations in C.
 
